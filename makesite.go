@@ -22,7 +22,7 @@ func main() {
 	outDir := flag.String("outDir", "./html-templates", "Path to output html templates")
 	flag.Parse()
 
-	postPaths := getFilesInDirV1(*dirName)
+	postPaths := getFilesInDirV2(*dirName)
 
 	for _, postPath := range postPaths {
 		// Get file contents
@@ -33,8 +33,8 @@ func main() {
 		t := template.Must(template.New("mvp_template.tmpl").ParseFiles("mvp_template.tmpl"))
 	
 		// Create output file if it does not exist
-		outputPath := *outDir + "/" + string(strings.Split(filepath.Base(postPath), ".")[0]) + ".html"
-
+		outputPath := filepath.Join(*outDir, fmt.Sprintf("%v.html", strings.Split(filepath.Base(postPath), ".")[0]))
+		
 		f, createFileErr := os.Create(outputPath)
 		if createFileErr != nil{
 			panic(createFileErr)
@@ -56,6 +56,26 @@ func fileToString(filePath string) string {
 	}
 
 	return string(fileContents)
+}
+
+func getFilesInDirV2(dirName string) []string {
+	var outputPaths []string
+
+	err := filepath.Walk(dirName, 
+		func(path string, info os.FileInfo, err error) error{
+			if err != nil{
+				panic(err)
+			}
+			if(!info.IsDir()){
+				outputPaths = append(outputPaths, path)
+			}
+			return nil
+		})
+	if err != nil{
+		panic(err)
+	}
+
+	return outputPaths
 }
 
 func getFilesInDirV1(dirName string) []string {
