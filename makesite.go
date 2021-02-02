@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Post struct {
@@ -15,16 +16,18 @@ type Post struct {
 }
 
 func main() {
+	startTime := time.Now()
+
 	// Get flag value
-	// filePath := flag.String("postPath", "first-post.txt", "Path to your post")
-	// outputPath := flag.String("outputPath", "output-post.html", "Output path for html file")
 	dirName := flag.String("dirName", "./posts", "Path to where post files are located")
 	outDir := flag.String("outDir", "./html-templates", "Path to output html templates")
 	flag.Parse()
 
 	postPaths := getFilesInDirV2(*dirName)
 
-	for _, postPath := range postPaths {
+	for postPath, size := range postPaths {
+		fmt.Printf("Generating HTML file for post: %v with contents of size: %v bytes\n", filepath.Base(postPath), size)
+
 		// Get file contents
 		fileContents := fileToString(postPath)
 		post := Post{fileContents}
@@ -34,12 +37,12 @@ func main() {
 	
 		// Create output file if it does not exist
 		outputPath := filepath.Join(*outDir, fmt.Sprintf("%v.html", strings.Split(filepath.Base(postPath), ".")[0]))
-		
 		f, createFileErr := os.Create(outputPath)
 		if createFileErr != nil{
 			panic(createFileErr)
 		}
-	
+		
+		// Execute template
 		err := t.Execute(f, post)
 		if err != nil {
 			panic(err)
@@ -47,6 +50,35 @@ func main() {
 	
 		f.Close()
 	}
+
+	elapsedTime := time.Since(startTime)
+
+	fmt.Printf("Success! Generated %v html pages (%3.2f kb total) in %s.", len(postPaths), getSizeOfDir(*outDir), elapsedTime)
+}
+
+func getSizeOfDir(dirName string) float32 {
+	var totalBytes int64 = 0
+	err := filepath.Walk(dirName, 
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil{
+				panic(err)
+			}
+
+			if(!info.IsDir()){
+				totalBytes += info.Size()
+			}
+
+			return nil
+		})
+	if err != nil{
+		panic(err)
+	}
+
+	return convertBytesToKilobytes(totalBytes)
+}
+
+func convertBytesToKilobytes(bytes int64) float32{
+	return float32(bytes) / 1000
 }
 
 func fileToString(filePath string) string {
@@ -58,8 +90,9 @@ func fileToString(filePath string) string {
 	return string(fileContents)
 }
 
-func getFilesInDirV2(dirName string) []string {
-	var outputPaths []string
+func getFilesInDirV2(dirName string) map[string]int64 {
+	// var outputPaths []string
+	var outputPaths = make(map[string]int64)
 
 	err := filepath.Walk(dirName, 
 		func(path string, info os.FileInfo, err error) error{
@@ -67,7 +100,7 @@ func getFilesInDirV2(dirName string) []string {
 				panic(err)
 			}
 			if(!info.IsDir()){
-				outputPaths = append(outputPaths, path)
+				outputPaths[path] = info.Size()
 			}
 			return nil
 		})
