@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
-	"text/template"
+	"path/filepath"
+	"strings"
 )
 
 type Post struct {
@@ -13,29 +16,37 @@ type Post struct {
 
 func main() {
 	// Get flag value
-	filePath := flag.String("postPath", "first-post.txt", "Path to your post")
-	outputPath := flag.String("outputPath", "output-post.html", "Output path for html file")
+	// filePath := flag.String("postPath", "first-post.txt", "Path to your post")
+	// outputPath := flag.String("outputPath", "output-post.html", "Output path for html file")
+	dirName := flag.String("dirName", "./posts", "Path to where post files are located")
+	outDir := flag.String("outDir", "./html-templates", "Path to output html templates")
 	flag.Parse()
 
-	// Get file contents
-	fileContents := fileToString(*filePath)
-	post := Post{fileContents}
+	postPaths := getFilesInDirV1(*dirName)
 
-	// Init template
-	t := template.Must(template.New("mvp_template.tmpl").ParseFiles("mvp_template.tmpl"))
+	for _, postPath := range postPaths {
+		// Get file contents
+		fileContents := fileToString(postPath)
+		post := Post{fileContents}
+	
+		// Init template
+		t := template.Must(template.New("mvp_template.tmpl").ParseFiles("mvp_template.tmpl"))
+	
+		// Create output file if it does not exist
+		outputPath := *outDir + "/" + string(strings.Split(filepath.Base(postPath), ".")[0]) + ".html"
 
-	// Create output file if it does not exist
-	f, createFileErr := os.Create(*outputPath)
-	if createFileErr != nil{
-		panic(createFileErr)
+		f, createFileErr := os.Create(outputPath)
+		if createFileErr != nil{
+			panic(createFileErr)
+		}
+	
+		err := t.Execute(f, post)
+		if err != nil {
+			panic(err)
+		}
+	
+		f.Close()
 	}
-
-	err := t.Execute(f, post)
-	if err != nil {
-		panic(err)
-	}
-
-	f.Close()
 }
 
 func fileToString(filePath string) string {
@@ -47,18 +58,24 @@ func fileToString(filePath string) string {
 	return string(fileContents)
 }
 
-// func main() {
-// 	todos := ToDo{"Andrey", []entry{{"hi", false}, {"hello", true}}}
+func getFilesInDirV1(dirName string) []string {
+	var outputPaths []string
+	
+	files, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		panic(err)
+	}
 
-// 	// Files are provided as a slice of strings.
-// 	paths := []string{
-// 		"template.tmpl",
-// 	}
+	for _, f := range files {
+		fmt.Println(f.Name())
+		outputPath := dirName + "/" + f.Name()
+		outputPaths = append(outputPaths, outputPath)
+	}
 
-// 	t := template.Must(template.New("template.tmpl").ParseFiles(paths...))
-// 	err := t.Execute(os.Stdout, todos)
-// 	if err != nil {
-// 	  panic(err)
-// 	}
-// }
+	fmt.Printf("Output paths: %v", outputPaths)
+
+	return outputPaths
+}
+
+
 
