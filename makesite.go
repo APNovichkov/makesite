@@ -1,16 +1,45 @@
 package main
 
-<<<<<<< HEAD
 import (
+	"flag"
 	"io/ioutil"
+	"os"
+	"text/template"
 )
 
-func main() {
-
+type Post struct {
+	Text string
 }
 
-func readFile() string {
-	fileContents, err := ioutil.ReadFile("first-post.txt")
+func main() {
+	// Get flag value
+	filePath := flag.String("postPath", "first-post.txt", "Path to your post")
+	outputPath := flag.String("outputPath", "output-post.html", "Output path for html file")
+	flag.Parse()
+
+	// Get file contents
+	fileContents := fileToString(*filePath)
+	post := Post{fileContents}
+
+	// Init template
+	t := template.Must(template.New("mvp_template.tmpl").ParseFiles("mvp_template.tmpl"))
+
+	// Create output file if it does not exist
+	f, createFileErr := os.Create(*outputPath)
+	if createFileErr != nil{
+		panic(createFileErr)
+	}
+
+	err := t.Execute(f, post)
+	if err != nil {
+		panic(err)
+	}
+
+	f.Close()
+}
+
+func fileToString(filePath string) string {
+	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -18,11 +47,18 @@ func readFile() string {
 	return string(fileContents)
 }
 
-func renderTemplate()
-=======
-import "fmt"
+// func main() {
+// 	todos := ToDo{"Andrey", []entry{{"hi", false}, {"hello", true}}}
 
-func main() {
-	fmt.Println("Hello, world!")
-}
->>>>>>> 9514ac8a2c135a448a2b15a4b246dcd5d59ee7bf
+// 	// Files are provided as a slice of strings.
+// 	paths := []string{
+// 		"template.tmpl",
+// 	}
+
+// 	t := template.Must(template.New("template.tmpl").ParseFiles(paths...))
+// 	err := t.Execute(os.Stdout, todos)
+// 	if err != nil {
+// 	  panic(err)
+// 	}
+// }
+
