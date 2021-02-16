@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Post struct {
@@ -16,6 +18,12 @@ type Post struct {
 }
 
 func main() {
+	// Initialize logger
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: false,
+		FullTimestamp: true,
+	})
+	
 	startTime := time.Now()
 
 	// Get flag value
@@ -26,8 +34,8 @@ func main() {
 	postPaths := getFilesInDirV2(*dirName)
 
 	for postPath, size := range postPaths {
-		fmt.Printf("Generating HTML file for post: %v with contents of size: %v bytes\n", filepath.Base(postPath), size)
-
+		log.Info(fmt.Sprintf("Generating HTML file for post: %v with contents of size: %v bytes\n", filepath.Base(postPath), size))
+		
 		// Get file contents
 		fileContents := fileToString(postPath)
 		post := Post{fileContents}
@@ -53,7 +61,7 @@ func main() {
 
 	elapsedTime := time.Since(startTime)
 
-	fmt.Printf("Success! Generated %v html pages (%3.2f kb total) in %s.", len(postPaths), getSizeOfDir(*outDir), elapsedTime)
+	log.Info(fmt.Sprintf("Success! Generated %v html pages (%3.2f kb total) in %s.", len(postPaths), getSizeOfDir(*outDir), elapsedTime))
 }
 
 func getSizeOfDir(dirName string) float32 {
@@ -61,6 +69,7 @@ func getSizeOfDir(dirName string) float32 {
 	err := filepath.Walk(dirName, 
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil{
+				log.Panic(err)
 				panic(err)
 			}
 
@@ -71,6 +80,7 @@ func getSizeOfDir(dirName string) float32 {
 			return nil
 		})
 	if err != nil{
+		log.Panic(err)
 		panic(err)
 	}
 
@@ -84,6 +94,7 @@ func convertBytesToKilobytes(bytes int64) float32{
 func fileToString(filePath string) string {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		log.Panic(err)
 		panic(err)
 	}
 
@@ -105,6 +116,7 @@ func getFilesInDirV2(dirName string) map[string]int64 {
 			return nil
 		})
 	if err != nil{
+		log.Panic(err)
 		panic(err)
 	}
 
@@ -116,6 +128,7 @@ func getFilesInDirV1(dirName string) []string {
 	
 	files, err := ioutil.ReadDir(dirName)
 	if err != nil {
+		log.Panic(err)
 		panic(err)
 	}
 
@@ -125,7 +138,7 @@ func getFilesInDirV1(dirName string) []string {
 		outputPaths = append(outputPaths, outputPath)
 	}
 
-	fmt.Printf("Output paths: %v", outputPaths)
+	log.Info(fmt.Sprintf("Output paths: %v", outputPaths))
 
 	return outputPaths
 }

@@ -91,10 +91,8 @@ If you get stuck on any step, be sure to print the output to `stdout`!
 #### v1.2 Requirements
 
 - [ ] Initialize Go modules in your project.
-- [ ] Add any third party library to your project to enhance it's functionality. Some ideas you might consider include **_(CHOOSE ONLY ONE)_**:
-    - [ ] Translating page content using Google Translate.
-    - [ ] Parse Markdown (`.md`) files and transform them into HTML. `#` through `######` should translate to `<h1>` through `<h6>` elements.
-    - [ ] **_FILL IN THE BLANK_**: `I will use the __________________________________ library. The documentation is located at __________________________________. My goal is to use it to __________________________________.`
+- [ ] Add any third party library to your project to enhance it's functionality:  
+    - [x] `I will use the logrus library. The documentation is located at github.com/sirupsen/logrus. My goal is to use it to print better log messages as my program is running.`
 - [ ] **Add, commit, and push to GitHub**.
 
 ## Resources
